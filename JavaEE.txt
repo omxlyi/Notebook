@@ -1,0 +1,154 @@
+HTTP request格式
+请求方式 URL 版本号
+Host
+
+请求格式：
+OPTIONS 返回服务器针对特定资源所支持的HTTP请求方法
+GET	向特定的资源发出请求。请求体中无内容
+POST	向指定资源提交数据进行处理请求。数据被包含在请求体中
+PUT	从客户端向服务器传送的数据取代指定的文档的内容
+DELETE	请求服务器删除指定的页面
+CONNECT	HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器
+TRACE	主要用于测试或诊断
+响应格式
+响应状态码
+
+Servlet 接口
+- service
+HttpServlet 类
+
+Tomcat 并发原理
+多线程
+针对每个httprequest，在servlet中以一个独立的线程跑
+这个线程会去调servlet对象的service方法。servlet对象是唯一的！servlet对象会被很多请求调用，如果不唯一，
+太吃内存。servlet对象不能有属性，线程共享JVM的内存空间的。线程中的局域变量不会有问题捏~在JVM中，不同的线程有各自的线程栈的。调线程栈。
+
+过程：
+1.read，完整读完httprequest的过程（网络可能丢包）
+2.decode，协议变对象（decode）
+3.compute，根据请求调用 doGet、doPost...
+4.encode，response变协议
+5.send，传给客户端
+
+线程的4个参数：
+1.max-threads：线程池线程数量上限，最大工作线程数（取决于硬件），默认200
+2.accept-count：排队（等待）队列长度，超过则拒绝提供服务，默认100
+3.max-connections：最大连接数，默认1w，通常不会动。max-threads + accept-count <= max-connections
+4.min-spare-threds：线程池中线程数量下限，线程池中一开始线程的数量，不会低于该数量，不够再加，不超过max-threads
+线程池用来管理线程，控制线程的上限和下线的
+IO密集型 线程可以开很大
+计算密集型 线程开很多没用，CPU算不过来QAQ
+
+在过程中会发现一个问题：
+IO如果会占用很大时间的话，线程会一直被占着，新来的请求得不到线程资源，被无情抛弃
+
+Tomcat8 之后就变成了 NIO，好多啦
+
+BIO 和 NIO的差别：
+BIO：
+IO的过程在线程里
+NIO
+IO不在线程内
+请求发送过来时，起一个NioChannel，用于接收从客户端传来的数据，当数据完整传完以后，产生一个事件（我读完了！）。用一个poller线程轮询NioChannel列表，将读完的数据交给socketprocessor。即把read和send拿到外面啦。
+把IO做成事件响应方式
+
+Maven项目管理
+目录结构
+依赖
+中央仓库
+生命周期
+插件
+POM支持继承
+
+<dependency>
+  <scope><scope>
+	provided：打包的时候并不会打到最终的工程上去
+
+
+spring IOC
+
+设计原则之创建者设计原则
+
+建立耦合的方法：
+1.通过构造方法
+2.通过set方法
+
+控制反转，我关联的对象我没有控制权，交给别人控制
+
+低耦合~
+
+切片测试
+mockB，测试用例，给你什么 返回什么。中间没有逻辑。
+只测A，不测B
+
+配置方式：
+1.注解，@Component
+2.配置类
+  @Configuration
+  @Bean
+
+Restful的资源模型
+- 单个资源
+- 资源对象集合
+- 资源之间的从属关系
+
+商品：/goods
+品牌：/brands
+分类：/categories
+
+合法性检查
+抛出 MethodArgumentNotValidException
+
+
+
+Mybatis!
+面向对象和面向关系的映射的
+
+面向对象：
+需求分析、领域建模！
+任何一个互联网系统，流量决定生死
+大负载
+如何解决大负载问题~
+对象模型 关系模型 的映射
+
+关联关系、继承关系
+关联关系：外键
+继承关系：单表存储
+
+索引比主键慢~
+根据索引查询一条记录：
+两步：根据索引查到主键、根据主键查到记录
+
+一对多、多对一：在多的地方加外键
+多对多：中间表
+
+找Maven依赖时 优先选择 starter
+默认配置：autoConfig
+老家伙们！
+自动产生，不管XML还是annotation 我都不看！
+知道两点：
+1.Mapper对象是由Spring框架实例化出来的
+2.忘了
+mapper方法中，传进去的是对象，传出来的也是对象
+
+配置：
+mapper-locations Mapper.xml文件的位置
+
+利用工具完成单表的文件生成
+利用mapper针对单个对象完成CRUD
+
+
+在Dao层 完成关联关系~  关系的处理 对象模型的构建
+如果这么简单来搞 那hibernate 和 mybatis 没有区别！？
+
+引入插件
+mybatis-generator-maven-plugin
+
+mybatis-generator-core
+
+事务、临界区问题 保证ACID
+
+大负载、高并发
+@Transaction、一般标在服务层
+问题一：传播性（propagation），因为服务层的代码会相互调用。
+回滚：rollbackFor、noRollbackFor，指定哪些异常回滚哪些不回滚
